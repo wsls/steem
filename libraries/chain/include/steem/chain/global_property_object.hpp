@@ -113,6 +113,8 @@ namespace steem { namespace chain {
           * their votes reduced.
           */
          uint32_t vote_power_reserve_rate = STEEM_INITIAL_VOTE_POWER_RATE;
+
+         uint64_t reverse_auction_seconds = 0;
 #ifdef STEEM_ENABLE_SMT
          asset smt_creation_fee = asset( 1000000, SBD_SYMBOL );
 #endif
@@ -156,6 +158,7 @@ FC_REFLECT( steem::chain::dynamic_global_property_object,
              (participation_count)
              (last_irreversible_block_num)
              (vote_power_reserve_rate)
+             (reverse_auction_seconds)
 #ifdef STEEM_ENABLE_SMT
              (smt_creation_fee)
 #endif
