@@ -4123,6 +4123,10 @@ void database::apply_hardfork( uint32_t hardfork )
          break;
 #ifdef IS_TEST_NET
       case STEEM_HARDFORK_0_20:
+         modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
+         {
+            gpo.reverse_auction_seconds = STEEM_REVERSE_AUCTION_WINDOW_SECONDS_HF20;
+         });
          break;
       case STEEM_HARDFORK_0_21:
          break;
