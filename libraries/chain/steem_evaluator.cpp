@@ -229,7 +229,7 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
    FC_ASSERT( creator.balance >= o.fee, "Insufficient balance to create account.", ( "creator.balance", creator.balance )( "required", o.fee ) );
 
-   if( _db.has_hardfork( STEEM_HARDFORK_0_19__987) )
+   if( _db.has_hardfork( STEEM_HARDFORK_0_19__987) && !_db.has_hardfork( STEEM_HARDFORK_0_20__1761 ) )
    {
       const witness_schedule_object& wso = _db.get_witness_schedule_object();
       FC_ASSERT( o.fee >= asset( wso.median_props.account_creation_fee.amount * STEEM_CREATE_ACCOUNT_WITH_STEEM_MODIFIER, STEEM_SYMBOL ), "Insufficient Fee: ${f} required, ${p} provided.",
