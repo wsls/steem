@@ -773,7 +773,7 @@ namespace detail
       FC_ASSERT( fund != nullptr, "Invalid reward fund name" );
 
       return *fund;
-   }  
+   }
 
    DEFINE_API_IMPL( condenser_api_impl, get_key_references )
    {
