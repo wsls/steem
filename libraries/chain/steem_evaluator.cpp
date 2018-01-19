@@ -284,6 +284,7 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
 
       if( _db.has_hardfork( STEEM_HARDFORK_0_11 ) )
       {
+         FC_TODO( "If after HF 20, there are no temp account creations, the HF check can be removed." )
          if( !_db.has_hardfork( STEEM_HARDFORK_0_20__1782 ) || o.creator != STEEM_TEMP_ACCOUNT )
          {
             acc.recovery_account = o.creator;
@@ -293,9 +294,6 @@ void account_create_evaluator::do_apply( const account_create_operation& o )
       {
          acc.recovery_account = "steem";
       }
-
-      FC_TODO( "If after HF 20, there are no temp account recoveries, the HF check can be removed." )
-
 
       #ifndef IS_LOW_MEM
          from_string( acc.json_metadata, o.json_metadata );
