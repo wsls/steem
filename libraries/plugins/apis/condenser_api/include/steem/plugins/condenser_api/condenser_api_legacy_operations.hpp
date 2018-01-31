@@ -3,6 +3,37 @@
 
 namespace steem { namespace plugins { namespace condenser_api {
 
+   template< typename T >
+   struct convert_to_legacy_static_variant
+   {
+      convert_to_legacy_static_variant( T& l_sv ) :
+         legacy_sv( l_sv ) {}
+
+      T& legacy_sv;
+
+      typedef void result_type;
+
+      template< typename V >
+      void operator()( const V& v ) const
+      {
+         legacy_sv = v;
+      }
+   };
+
+   typedef static_variant<
+            protocol::comment_payout_beneficiaries
+   #ifdef STEEM_ENABLE_SMT
+            ,protocol::allowed_vote_assets
+   #endif
+         > legacy_comment_options_extensions;
+
+   typedef vector< legacy_comment_options_extensions > legacy_comment_options_extensions_type;
+
+   typedef static_variant<
+            protocol::pow2,
+            protocol::equihash_pow
+         > legacy_pow2_work;
+
    using namespace steem::protocol;
 
    typedef account_update_operation               legacy_account_update_operation;
@@ -22,7 +53,6 @@ namespace steem { namespace plugins { namespace condenser_api {
    typedef custom_binary_operation                legacy_custom_binary_operation;
    typedef limit_order_cancel_operation           legacy_limit_order_cancel_operation;
    typedef pow_operation                          legacy_pow_operation;
-   typedef pow2_operation                         legacy_pow2_operation;
    typedef report_over_production_operation       legacy_report_over_production_operation;
    typedef request_account_recovery_operation     legacy_request_account_recovery_operation;
    typedef recover_account_operation              legacy_recover_account_operation;
@@ -111,7 +141,12 @@ namespace steem { namespace plugins { namespace condenser_api {
          allow_votes( op.allow_votes ),
          allow_curation_rewards( op.allow_curation_rewards )
       {
-         extensions.insert( op.extensions.begin(), op.extensions.end() );
+         for( const auto& e : op.extensions )
+         {
+            legacy_comment_options_extensions ext;
+            e.visit( convert_to_legacy_static_variant< legacy_comment_options_extensions >( ext ) );
+            extensions.push_back( e );
+         }
       }
 
       account_name_type author;
@@ -121,7 +156,7 @@ namespace steem { namespace plugins { namespace condenser_api {
       uint16_t          percent_steem_dollars;
       bool              allow_votes;
       bool              allow_curation_rewards;
-      protocol::comment_options_extensions_type extensions;
+      legacy_comment_options_extensions_type extensions;
    };
 
 
@@ -195,6 +230,21 @@ namespace steem { namespace plugins { namespace condenser_api {
       uint32_t          escrow_id;
       legacy_asset      sbd_amount;
       legacy_asset      steem_amount;
+   };
+
+   struct legacy_pow2_operation
+   {
+      legacy_pow2_operation() {}
+      legacy_pow2_operation( const pow2_operation& op ) :
+         new_owner_key( op.new_owner_key ),
+         props( op.props )
+      {
+         op.work.visit( convert_to_legacy_static_variant< legacy_pow2_work >( work ) );
+      }
+
+      legacy_pow2_work              work;
+      optional< public_key_type >   new_owner_key;
+      legacy_chain_properties       props;
    };
 
    struct legacy_transfer_to_vesting_operation
@@ -625,205 +675,210 @@ namespace steem { namespace plugins { namespace condenser_api {
 
       legacy_operation& l_op;
 
-      bool operator()( const account_update_operation& op )               { l_op = op; return true; }
-      bool operator()( const comment_operation& op )                      { l_op = op; return true; }
-      bool operator()( const placeholder_a_operation& op )                { l_op = op; return true; }
-      bool operator()( const placeholder_b_operation& op )                { l_op = op; return true; }
-      bool operator()( const delete_comment_operation& op )               { l_op = op; return true; }
-      bool operator()( const vote_operation& op )                         { l_op = op; return true; }
-      bool operator()( const escrow_approve_operation& op )               { l_op = op; return true; }
-      bool operator()( const escrow_dispute_operation& op )               { l_op = op; return true; }
-      bool operator()( const set_withdraw_vesting_route_operation& op )   { l_op = op; return true; }
-      bool operator()( const witness_set_properties_operation& op )       { l_op = op; return true; }
-      bool operator()( const account_witness_vote_operation& op )         { l_op = op; return true; }
-      bool operator()( const account_witness_proxy_operation& op )        { l_op = op; return true; }
-      bool operator()( const custom_operation& op )                       { l_op = op; return true; }
-      bool operator()( const custom_json_operation& op )                  { l_op = op; return true; }
-      bool operator()( const custom_binary_operation& op )                { l_op = op; return true; }
-      bool operator()( const limit_order_cancel_operation& op )           { l_op = op; return true; }
-      bool operator()( const pow_operation& op )                          { l_op = op; return true; }
-      bool operator()( const pow2_operation& op )                         { l_op = op; return true; }
-      bool operator()( const report_over_production_operation& op )       { l_op = op; return true; }
-      bool operator()( const request_account_recovery_operation& op )     { l_op = op; return true; }
-      bool operator()( const recover_account_operation& op )              { l_op = op; return true; }
-      bool operator()( const reset_account_operation& op )                { l_op = op; return true; }
-      bool operator()( const set_reset_account_operation& op )            { l_op = op; return true; }
-      bool operator()( const change_recovery_account_operation& op )      { l_op = op; return true; }
-      bool operator()( const cancel_transfer_from_savings_operation& op )  { l_op = op; return true; }
-      bool operator()( const decline_voting_rights_operation& op )         { l_op = op; return true; }
-      bool operator()( const shutdown_witness_operation& op )              { l_op = op; return true; }
-      bool operator()( const hardfork_operation& op )                      { l_op = op; return true; }
-      bool operator()( const comment_payout_update_operation& op )         { l_op = op; return true; }
+      bool operator()( const account_update_operation& op )const                 { l_op = op; return true; }
+      bool operator()( const comment_operation& op )const                        { l_op = op; return true; }
+      bool operator()( const placeholder_a_operation& op )const                  { l_op = op; return true; }
+      bool operator()( const placeholder_b_operation& op )const                  { l_op = op; return true; }
+      bool operator()( const delete_comment_operation& op )const                 { l_op = op; return true; }
+      bool operator()( const vote_operation& op )const                           { l_op = op; return true; }
+      bool operator()( const escrow_approve_operation& op )const                 { l_op = op; return true; }
+      bool operator()( const escrow_dispute_operation& op )const                 { l_op = op; return true; }
+      bool operator()( const set_withdraw_vesting_route_operation& op )const     { l_op = op; return true; }
+      bool operator()( const witness_set_properties_operation& op )const         { l_op = op; return true; }
+      bool operator()( const account_witness_vote_operation& op )const           { l_op = op; return true; }
+      bool operator()( const account_witness_proxy_operation& op )const          { l_op = op; return true; }
+      bool operator()( const custom_operation& op )const                         { l_op = op; return true; }
+      bool operator()( const custom_json_operation& op )const                    { l_op = op; return true; }
+      bool operator()( const custom_binary_operation& op )const                  { l_op = op; return true; }
+      bool operator()( const limit_order_cancel_operation& op )const             { l_op = op; return true; }
+      bool operator()( const pow_operation& op )const                            { l_op = op; return true; }
+      bool operator()( const report_over_production_operation& op )const         { l_op = op; return true; }
+      bool operator()( const request_account_recovery_operation& op )const       { l_op = op; return true; }
+      bool operator()( const recover_account_operation& op )const                { l_op = op; return true; }
+      bool operator()( const reset_account_operation& op )const                  { l_op = op; return true; }
+      bool operator()( const set_reset_account_operation& op )const              { l_op = op; return true; }
+      bool operator()( const change_recovery_account_operation& op )const        { l_op = op; return true; }
+      bool operator()( const cancel_transfer_from_savings_operation& op )const   { l_op = op; return true; }
+      bool operator()( const decline_voting_rights_operation& op )const          { l_op = op; return true; }
+      bool operator()( const shutdown_witness_operation& op )const               { l_op = op; return true; }
+      bool operator()( const hardfork_operation& op )const                       { l_op = op; return true; }
+      bool operator()( const comment_payout_update_operation& op )const          { l_op = op; return true; }
 
-      bool operator()( const transfer_operation& op )
+      bool operator()( const transfer_operation& op )const
       {
          l_op = legacy_transfer_operation( op );
          return true;
       }
 
-      bool operator()( const transfer_to_vesting_operation& op )
+      bool operator()( const transfer_to_vesting_operation& op )const
       {
          l_op = legacy_transfer_to_vesting_operation( op );
          return true;
       }
 
-      bool operator()( const withdraw_vesting_operation& op )
+      bool operator()( const withdraw_vesting_operation& op )const
       {
          l_op = legacy_withdraw_vesting_operation( op );
          return true;
       }
 
-      bool operator()( const limit_order_create_operation& op )
+      bool operator()( const limit_order_create_operation& op )const
       {
          l_op = legacy_limit_order_create_operation( op );
          return true;
       }
 
-      bool operator()( const feed_publish_operation& op )
+      bool operator()( const feed_publish_operation& op )const
       {
          l_op = legacy_feed_publish_operation( op );
          return true;
       }
 
-      bool operator()( const convert_operation& op )
+      bool operator()( const convert_operation& op )const
       {
          l_op = legacy_convert_operation( op );
          return true;
       }
 
-      bool operator()( const account_create_operation& op )
+      bool operator()( const account_create_operation& op )const
       {
          l_op = legacy_account_create_operation( op );
          return true;
       }
 
-      bool operator()( const witness_update_operation& op )
+      bool operator()( const witness_update_operation& op )const
       {
          l_op = legacy_witness_update_operation( op );
          return true;
       }
 
-      bool operator()( const comment_options_operation& op )
+      bool operator()( const comment_options_operation& op )const
       {
          l_op = legacy_comment_options_operation( op );
          return true;
       }
 
-      bool operator()( const limit_order_create2_operation& op )
+      bool operator()( const limit_order_create2_operation& op )const
       {
          l_op = legacy_limit_order_create2_operation( op );
          return true;
       }
 
-      bool operator()( const escrow_transfer_operation& op )
+      bool operator()( const escrow_transfer_operation& op )const
       {
          l_op = legacy_escrow_transfer_operation( op );
          return true;
       }
 
-      bool operator()( const escrow_release_operation& op )
+      bool operator()( const escrow_release_operation& op )const
       {
          l_op = legacy_escrow_release_operation( op );
          return true;
       }
 
-      bool operator()( const transfer_to_savings_operation& op )
+      bool operator()( const pow2_operation& op )const
+      {
+         l_op = legacy_pow2_operation( op );
+         return true;
+      }
+
+      bool operator()( const transfer_to_savings_operation& op )const
       {
          l_op = legacy_transfer_to_savings_operation( op );
          return true;
       }
 
-      bool operator()( const transfer_from_savings_operation& op )
+      bool operator()( const transfer_from_savings_operation& op )const
       {
          l_op = legacy_transfer_from_savings_operation( op );
          return true;
       }
 
-      bool operator()( const claim_reward_balance_operation& op )
+      bool operator()( const claim_reward_balance_operation& op )const
       {
          l_op = legacy_claim_reward_balance_operation( op );
          return true;
       }
 
-      bool operator()( const delegate_vesting_shares_operation& op )
+      bool operator()( const delegate_vesting_shares_operation& op )const
       {
          l_op = legacy_delegate_vesting_shares_operation( op );
          return true;
       }
 
-      bool operator()( const account_create_with_delegation_operation& op )
+      bool operator()( const account_create_with_delegation_operation& op )const
       {
          l_op = legacy_account_create_with_delegation_operation( op );
          return true;
       }
 
-      bool operator()( const fill_convert_request_operation& op )
+      bool operator()( const fill_convert_request_operation& op )const
       {
          l_op = legacy_fill_convert_request_operation( op );
          return true;
       }
 
-      bool operator()( const author_reward_operation& op )
+      bool operator()( const author_reward_operation& op )const
       {
          l_op = legacy_author_reward_operation( op );
          return true;
       }
 
-      bool operator()( const curation_reward_operation& op )
+      bool operator()( const curation_reward_operation& op )const
       {
          l_op = legacy_curation_reward_operation( op );
          return true;
       }
 
-      bool operator()( const comment_reward_operation& op )
+      bool operator()( const comment_reward_operation& op )const
       {
          l_op = legacy_comment_reward_operation( op );
          return true;
       }
 
-      bool operator()( const liquidity_reward_operation& op )
+      bool operator()( const liquidity_reward_operation& op )const
       {
          l_op = legacy_liquidity_reward_operation( op );
          return true;
       }
 
-      bool operator()( const interest_operation& op )
+      bool operator()( const interest_operation& op )const
       {
          l_op = legacy_interest_operation( op );
          return true;
       }
 
-      bool operator()( const fill_vesting_withdraw_operation& op )
+      bool operator()( const fill_vesting_withdraw_operation& op )const
       {
          l_op = legacy_fill_vesting_withdraw_operation( op );
          return true;
       }
 
-      bool operator()( const fill_order_operation& op )
+      bool operator()( const fill_order_operation& op )const
       {
          l_op = legacy_fill_order_operation( op );
          return true;
       }
 
-      bool operator()( const fill_transfer_from_savings_operation& op )
+      bool operator()( const fill_transfer_from_savings_operation& op )const
       {
          l_op = legacy_fill_transfer_from_savings_operation( op );
          return true;
       }
 
-      bool operator()( const return_vesting_delegation_operation& op )
+      bool operator()( const return_vesting_delegation_operation& op )const
       {
          l_op = legacy_return_vesting_delegation_operation( op );
          return true;
       }
 
-      bool operator()( const comment_benefactor_reward_operation& op )
+      bool operator()( const comment_benefactor_reward_operation& op )const
       {
          l_op = legacy_comment_benefactor_reward_operation( op );
          return true;
       }
 
-      bool operator()( const producer_reward_operation& op )
+      bool operator()( const producer_reward_operation& op )const
       {
          l_op = legacy_producer_reward_operation( op );
          return true;
@@ -841,6 +896,55 @@ namespace fc {
 
 void to_variant( const steem::plugins::condenser_api::legacy_operation&, fc::variant& );
 void from_variant( const fc::variant&, steem::plugins::condenser_api::legacy_operation& );
+
+void to_variant( const steem::plugins::condenser_api::legacy_comment_options_extensions&, fc::variant& );
+void from_variant( const fc::variant&, steem::plugins::condenser_api::legacy_comment_options_extensions& );
+
+void to_variant( const steem::plugins::condenser_api::legacy_pow2_work&, fc::variant& );
+void from_variant( const fc::variant&, steem::plugins::condenser_api::legacy_pow2_work& );
+
+struct from_old_static_variant
+{
+   variant& var;
+   from_old_static_variant( variant& dv ):var(dv){}
+
+   typedef void result_type;
+   template<typename T> void operator()( const T& v )const
+   {
+      to_variant( v, var );
+   }
+};
+
+struct to_old_static_variant
+{
+   const variant& var;
+   to_old_static_variant( const variant& dv ):var(dv){}
+
+   typedef void result_type;
+   template<typename T> void operator()( T& v )const
+   {
+      from_variant( var, v );
+   }
+};
+
+template< typename T >
+void old_sv_to_variant( const T& sv, fc::variant& v )
+{
+   variant tmp;
+   variants vars(2);
+   vars[0] = sv.which();
+   sv.visit( from_old_static_variant(vars[1]) );
+   v = std::move(vars);
+}
+
+template< typename T >
+void old_sv_from_variant( const fc::variant& v, T& sv )
+{
+   auto ar = v.get_array();
+   if( ar.size() < 2 ) return;
+   sv.set_which( static_cast< int64_t >( ar[0].as_uint64() ) );
+   sv.visit( to_old_static_variant(ar[1]) );
+}
 
 }
 
@@ -881,6 +985,7 @@ FC_REFLECT( steem::plugins::condenser_api::legacy_limit_order_create2_operation,
 FC_REFLECT( steem::plugins::condenser_api::legacy_comment_options_operation, (author)(permlink)(max_accepted_payout)(percent_steem_dollars)(allow_votes)(allow_curation_rewards)(extensions) )
 FC_REFLECT( steem::plugins::condenser_api::legacy_escrow_transfer_operation, (from)(to)(sbd_amount)(steem_amount)(escrow_id)(agent)(fee)(json_meta)(ratification_deadline)(escrow_expiration) );
 FC_REFLECT( steem::plugins::condenser_api::legacy_escrow_release_operation, (from)(to)(agent)(who)(receiver)(escrow_id)(sbd_amount)(steem_amount) );
+FC_REFLECT( steem::plugins::condenser_api::legacy_pow2_operation, (work)(new_owner_key)(props) )
 FC_REFLECT( steem::plugins::condenser_api::legacy_claim_reward_balance_operation, (account)(reward_steem)(reward_sbd)(reward_vests) )
 FC_REFLECT( steem::plugins::condenser_api::legacy_delegate_vesting_shares_operation, (delegator)(delegatee)(vesting_shares) );
 FC_REFLECT( steem::plugins::condenser_api::legacy_author_reward_operation, (author)(permlink)(sbd_payout)(steem_payout)(vesting_payout) )

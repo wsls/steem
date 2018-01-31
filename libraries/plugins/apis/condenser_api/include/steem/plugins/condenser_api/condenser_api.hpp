@@ -10,7 +10,7 @@
 #include <steem/plugins/market_history_api/market_history_api.hpp>
 #include <steem/plugins/witness_api/witness_api.hpp>
 
-#include <steem/plugins/condenser_api/condenser_api_legacy_operations.hpp>
+#include <steem/plugins/condenser_api/condenser_api_legacy_objects.hpp>
 
 #include <fc/optional.hpp>
 #include <fc/variant.hpp>
@@ -851,7 +851,7 @@ DEFINE_API_ARGS( get_trending_tags,                      vector< variant >,   ve
 DEFINE_API_ARGS( get_state,                              vector< variant >,   state )
 DEFINE_API_ARGS( get_active_witnesses,                   vector< variant >,   vector< account_name_type > )
 DEFINE_API_ARGS( get_block_header,                       vector< variant >,   optional< block_header > )
-DEFINE_API_ARGS( get_block,                              vector< variant >,   optional< block_api::api_signed_block_object > )
+DEFINE_API_ARGS( get_block,                              vector< variant >,   optional< legacy_signed_block > )
 DEFINE_API_ARGS( get_ops_in_block,                       vector< variant >,   vector< api_operation_object > )
 DEFINE_API_ARGS( get_config,                             vector< variant >,   fc::variant_object )
 DEFINE_API_ARGS( get_dynamic_global_properties,          vector< variant >,   extended_dynamic_global_properties )
@@ -885,7 +885,7 @@ DEFINE_API_ARGS( lookup_witness_accounts,                vector< variant >,   ve
 DEFINE_API_ARGS( get_open_orders,                        vector< variant >,   vector< extended_limit_order > )
 DEFINE_API_ARGS( get_witness_count,                      vector< variant >,   uint64_t )
 DEFINE_API_ARGS( get_transaction_hex,                    vector< variant >,   string )
-DEFINE_API_ARGS( get_transaction,                        vector< variant >,   annotated_signed_transaction )
+DEFINE_API_ARGS( get_transaction,                        vector< variant >,   legacy_signed_transaction )
 DEFINE_API_ARGS( get_required_signatures,                vector< variant >,   set< public_key_type > )
 DEFINE_API_ARGS( get_potential_signatures,               vector< variant >,   set< public_key_type > )
 DEFINE_API_ARGS( verify_authority,                       vector< variant >,   bool )

@@ -22,7 +22,6 @@ add_library( steem_protocol
              authority.cpp
              operations.cpp
              sign_state.cpp
-             operation_util_impl.cpp
              transaction.cpp
              block.cpp
              asset.cpp

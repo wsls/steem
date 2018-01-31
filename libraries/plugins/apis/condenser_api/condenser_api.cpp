@@ -710,7 +710,12 @@ namespace detail
    {
       CHECK_ARG_SIZE( 1 )
       FC_ASSERT( _block_api, "block_api_plugin not enabled." );
-      return _block_api->get_block( { args[0].as< uint32_t >() } ).block;
+      get_block_return result;
+      auto block = _block_api->get_block( { args[0].as< uint32_t >() } ).block;
+      if( block )
+         result = *block;
+
+      return result;
    }
 
    DEFINE_API_IMPL( condenser_api_impl, get_ops_in_block )
@@ -1212,7 +1217,7 @@ namespace detail
       CHECK_ARG_SIZE( 1 )
       FC_ASSERT( _account_history_api, "account_history_api_plugin not enabled." );
 
-      return _account_history_api->get_transaction( { args[0].as< transaction_id_type >() } );
+      return legacy_signed_transaction( _account_history_api->get_transaction( { args[0].as< transaction_id_type >() } ) );
    }
 
    DEFINE_API_IMPL( condenser_api_impl, get_required_signatures )
