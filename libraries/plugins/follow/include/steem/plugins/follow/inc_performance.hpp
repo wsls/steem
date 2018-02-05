@@ -23,9 +23,9 @@ class dumper
 
       dumper() :
 #if ENABLE_STD_ALLOCATOR == 1
-      f( "std_dumped_objects.txt" )
+      f( "std_dumped_objects.txt", std::ofstream::out | std::ofstream::app )
 #else
-      f( "bip_dumped_objects.txt" )
+      f( "bip_dumped_objects.txt", std::ofstream::out | std::ofstream::app )
 #endif
       {
       }
