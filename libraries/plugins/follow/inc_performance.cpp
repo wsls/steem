@@ -61,19 +61,27 @@ uint32_t performance_impl::get_actual_id( const blog_object& obj ) const
 template<>
 const char* performance_impl::get_actual_name( const feed_object& obj ) const
 {
-   return "feed";
+   return "f_object";
 }
 
 template<>
 const char* performance_impl::get_actual_name( const blog_object& obj ) const
 {
-   return "blog";
+   return "b_object";
 }
 
 template<>
 void performance_impl::modify< performance_data::t_creation_type::full_feed >( const feed_object& obj, const account_name_type& start_account, uint32_t next_id, performance_data& pd ) const
 {
    pd.s.creation = false;
+   std::string dbg_str ="modify-";
+   std::string dbg_fakse_str ="fakeee-";
+
+   dbg_str += get_actual_name( obj );
+   dbg_fakse_str += get_actual_name( obj );
+
+   dumper::instance()->dump( dbg_fakse_str.c_str(), std::string( obj.account ), next_id );
+   dumper::instance()->dump( dbg_str.c_str(), std::string( obj.account ), get_actual_id( obj ) );
 
    db.modify( obj, [&]( feed_object& f )
    {
@@ -98,6 +106,14 @@ template<>
 void performance_impl::modify< performance_data::t_creation_type::part_feed >( const feed_object& obj, const account_name_type& start_account, uint32_t next_id, performance_data& pd ) const
 {
    pd.s.creation = false;
+   std::string dbg_str ="modify-";
+   std::string dbg_fakse_str ="fakeee-";
+
+   dbg_str += get_actual_name( obj );
+   dbg_fakse_str += get_actual_name( obj );
+   
+   dumper::instance()->dump( dbg_fakse_str.c_str(), std::string( obj.account ), next_id );
+   dumper::instance()->dump( dbg_str.c_str(), std::string( obj.account ), get_actual_id( obj ) );
 
    db.modify( obj, [&]( feed_object& f )
    {
@@ -115,6 +131,14 @@ template<>
 void performance_impl::modify< performance_data::t_creation_type::full_blog >( const blog_object& obj, const account_name_type& start_account, uint32_t next_id, performance_data& pd ) const
 {
    pd.s.creation = false;
+   std::string dbg_str ="modify-";
+   std::string dbg_fakse_str ="fakeee-";
+
+   dbg_str += get_actual_name( obj );
+   dbg_fakse_str += get_actual_name( obj );
+
+   dumper::instance()->dump( dbg_fakse_str.c_str(), std::string( obj.account ), next_id );
+   dumper::instance()->dump( dbg_str.c_str(), std::string( obj.account ), get_actual_id( obj ) );
 
    db.modify( obj, [&]( blog_object& b )
    {
@@ -138,6 +162,8 @@ void performance_impl::skip_modify( const Iterator& actual, performance_data& pd
 template< performance_data::t_creation_type CreationType, typename Iterator >
 void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& actual, performance_data& pd ) const
 {
+   std::string dbg_str ="remove-";
+
    if( is_delayed )
    {
       if( init )
@@ -147,6 +173,9 @@ void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& act
          auto removed = std::prev( actual );
          if( CreationType == performance_data::t_creation_type::full_feed )
             skip_modify( removed, pd );
+
+         dbg_str = get_actual_name( *removed );
+         dumper::instance()->dump( dbg_str.c_str(), std::string( removed->account ), get_actual_id( *removed ) );
          db.remove( *removed );
       }
    }
@@ -154,6 +183,9 @@ void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& act
    {
       if( CreationType == performance_data::t_creation_type::full_feed )
          skip_modify( actual, pd );
+      
+      dbg_str += get_actual_name( *actual );
+      dumper::instance()->dump( dbg_str.c_str(), std::string( actual->account ), get_actual_id( *actual ) );
       db.remove( *actual );
    }
 }
