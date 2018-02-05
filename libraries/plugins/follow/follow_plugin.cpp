@@ -196,6 +196,7 @@ struct post_operation_visitor
 
          performance_data pd;
 
+         dumper::instance()->check_block( db.head_block_num() );
          if( db.head_block_time() >= _plugin._self.start_feeds )
          {
             while( itr != idx.end() && itr->following == op.author )

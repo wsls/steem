@@ -16,7 +16,10 @@ class performance_impl;
 class dumper
 {
    private:
-      
+
+      uint min_block = 19000000;
+      uint block = 0;
+
       std::ofstream f;
 
       static std::unique_ptr< dumper > self;
@@ -46,12 +49,21 @@ class dumper
          return self;
       }
 
+      void check_block( uint32_t _block )
+      {
+         block = _block;
+      }
+
       template< typename T, typename T2 >
       void dump( const char* message, const T& data, const T2& data2 )
       {
          static uint64_t counter = 0;
-         f<<counter++<<" "<<message<<" "<<data<<" "<<data2<<"\n";
-         f.flush();
+
+         if( block >= min_block )
+         {
+            f<<counter++<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+            f.flush();
+         }
       }
 };
 
