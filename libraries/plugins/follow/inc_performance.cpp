@@ -163,6 +163,7 @@ template< performance_data::t_creation_type CreationType, typename Iterator >
 void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& actual, performance_data& pd ) const
 {
    std::string dbg_str ="remove-";
+   std::string dbg_fakse_str ="fakeee-";
 
    if( is_delayed )
    {
@@ -174,7 +175,10 @@ void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& act
          if( CreationType == performance_data::t_creation_type::full_feed )
             skip_modify( removed, pd );
 
-         dbg_str = get_actual_name( *removed );
+         dbg_str += get_actual_name( *removed );
+         dbg_fakse_str += get_actual_name( *removed );
+         if( !pd.s.allow_modify )
+            dumper::instance()->dump( dbg_fakse_str.c_str(), std::string( removed->account ), get_actual_id( *removed ) );
          dumper::instance()->dump( dbg_str.c_str(), std::string( removed->account ), get_actual_id( *removed ) );
          db.remove( *removed );
       }
@@ -185,6 +189,9 @@ void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& act
          skip_modify( actual, pd );
       
       dbg_str += get_actual_name( *actual );
+      dbg_fakse_str += get_actual_name( *actual );
+      if( !pd.s.allow_modify )
+         dumper::instance()->dump( dbg_fakse_str.c_str(), std::string( actual->account ), get_actual_id( *actual ) );
       dumper::instance()->dump( dbg_str.c_str(), std::string( actual->account ), get_actual_id( *actual ) );
       db.remove( *actual );
    }
