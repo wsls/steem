@@ -4,6 +4,8 @@
 #include <steem/chain/steem_object_types.hpp>
 #include <steem/chain/database.hpp>
 
+#include <thread>
+
 namespace steem { namespace plugins{ namespace follow {
 
 using namespace steem::chain;
@@ -17,7 +19,7 @@ class dumper
 {
    private:
 
-      uint min_block = 19600000;
+      uint min_block = 0;//19600000;
       uint block = 0;
 
       std::ofstream f;
@@ -61,7 +63,7 @@ class dumper
 
          if( block >= min_block )
          {
-            f<<counter++<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+            f<<counter++<<" "<<message<<" "<<data<<" "<<data2<<" "<<std::this_thread::get_id()<<"\n";
             f.flush();
          }
       }

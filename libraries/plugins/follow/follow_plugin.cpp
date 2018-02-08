@@ -115,7 +115,7 @@ struct pre_operation_visitor
          {
             const auto& old_feed = *itr;
             ++itr;
-            dumper::instance()->dump( "remove-f_object", std::string( old_feed.account ), old_feed.account_feed_id );
+            dumper::instance()->dump( "remove-f_object4", std::string( old_feed.account ), old_feed.account_feed_id );
             db.remove( old_feed );
          }
 
@@ -126,7 +126,7 @@ struct pre_operation_visitor
          {
             const auto& old_blog = *blog_itr;
             ++blog_itr;
-            dumper::instance()->dump( "remove-b_object", std::string( old_blog.account ), old_blog.blog_feed_id );
+            dumper::instance()->dump( "remove-b_object5", std::string( old_blog.account ), old_blog.blog_feed_id );
             db.remove( old_blog );
          }
       }
@@ -224,7 +224,7 @@ struct post_operation_visitor
 
                   if( pd.s.creation && is_empty )
                   {
-                     dumper::instance()->dump( "create-f_object", std::string( itr->follower ), next_id );
+                     dumper::instance()->dump( "create-f_object6", std::string( itr->follower ), next_id );
                      db.create< feed_object >( [&]( feed_object& f )
                      {
                         f.account = itr->follower;
@@ -249,7 +249,7 @@ struct post_operation_visitor
          if( pd.s.creation && is_empty )
          {
             //allow_cnt = true;
-            dumper::instance()->dump( "create-b_object", std::string( op.author ), next_id );
+            dumper::instance()->dump( "create-b_object7", std::string( op.author ), next_id );
             db.create< blog_object >( [&]( blog_object& b)
             {
                b.account = op.author;

@@ -74,8 +74,8 @@ template<>
 void performance_impl::modify< performance_data::t_creation_type::full_feed >( const feed_object& obj, const account_name_type& start_account, uint32_t next_id, performance_data& pd ) const
 {
    pd.s.creation = false;
-   std::string dbg_str ="modify-";
-   std::string dbg_fakse_str ="fakeee-";
+   std::string dbg_str ="modify8-";
+   std::string dbg_fakse_str ="fakeee8-";
 
    dbg_str += get_actual_name( obj );
    dbg_fakse_str += get_actual_name( obj );
@@ -106,8 +106,8 @@ template<>
 void performance_impl::modify< performance_data::t_creation_type::part_feed >( const feed_object& obj, const account_name_type& start_account, uint32_t next_id, performance_data& pd ) const
 {
    pd.s.creation = false;
-   std::string dbg_str ="modify-";
-   std::string dbg_fakse_str ="fakeee-";
+   std::string dbg_str ="modify9-";
+   std::string dbg_fakse_str ="fakeee9-";
 
    dbg_str += get_actual_name( obj );
    dbg_fakse_str += get_actual_name( obj );
@@ -131,8 +131,8 @@ template<>
 void performance_impl::modify< performance_data::t_creation_type::full_blog >( const blog_object& obj, const account_name_type& start_account, uint32_t next_id, performance_data& pd ) const
 {
    pd.s.creation = false;
-   std::string dbg_str ="modify-";
-   std::string dbg_fakse_str ="fakeee-";
+   std::string dbg_str ="modify10-";
+   std::string dbg_fakse_str ="fakeee10-";
 
    dbg_str += get_actual_name( obj );
    dbg_fakse_str += get_actual_name( obj );
@@ -162,8 +162,8 @@ void performance_impl::skip_modify( const Iterator& actual, performance_data& pd
 template< performance_data::t_creation_type CreationType, typename Iterator >
 void performance_impl::remember_last( bool is_delayed, bool& init, Iterator& actual, performance_data& pd ) const
 {
-   std::string dbg_str ="remove-";
-   std::string dbg_fakse_str ="fakeee-";
+   std::string dbg_str ="remove11-";
+   std::string dbg_fakse_str ="fakeee11-";
 
    if( is_delayed )
    {
