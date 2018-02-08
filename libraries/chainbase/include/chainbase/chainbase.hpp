@@ -260,7 +260,7 @@ namespace chainbase {
          void modify( const value_type& obj, Modifier&& m ) {
             on_modify( obj );
             auto ok = _indices.modify( _indices.iterator_to( obj ), m );
-            if( !ok ) BOOST_THROW_EXCEPTION( std::logic_error( "Could not modify object, most likely a uniqueness constraint was violated" ) );
+            if( !ok ) BOOST_THROW_EXCEPTION( std::logic_error( "Could not modify object-MODIFY, most likely a uniqueness constraint was violated" ) );
          }
 
          void remove( const value_type& obj ) {
@@ -353,7 +353,7 @@ namespace chainbase {
                auto ok = _indices.modify( _indices.find( item.second.id ), [&]( value_type& v ) {
                   v = std::move( item.second );
                });
-               if( !ok ) BOOST_THROW_EXCEPTION( std::logic_error( "Could not modify object, most likely a uniqueness constraint was violated" ) );
+               if( !ok ) BOOST_THROW_EXCEPTION( std::logic_error( "Could not modify object-UNDO, most likely a uniqueness constraint was violated" ) );
             }
 
             for( const auto& id : head.new_ids )

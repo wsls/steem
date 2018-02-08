@@ -17,7 +17,7 @@ class dumper
 {
    private:
 
-      uint min_block = 19000000;
+      uint min_block = 19600000;
       uint block = 0;
 
       std::ofstream f;

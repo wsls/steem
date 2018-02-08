@@ -196,6 +196,17 @@ struct post_operation_visitor
 
          performance_data pd;
 
+         // database::session* session = nullptr;
+         // static int cnt = 1; 
+         // static int max_cnt = 2;
+
+         // if( ( cnt % max_cnt ) == 0 )
+         // {
+         //    session = new database::session( db.start_undo_session( true ) );
+         // }
+
+         // bool allow_cnt = false;
+
          dumper::instance()->check_block( db.head_block_num() );
          if( db.head_block_time() >= _plugin._self.start_feeds )
          {
@@ -203,6 +214,8 @@ struct post_operation_visitor
             {
                if( itr->what & ( 1 << blog ) )
                {
+                  //allow_cnt = true;
+
                   auto feed_itr = comment_idx.find( boost::make_tuple( c.id, itr->follower ) );
                   bool is_empty = feed_itr == comment_idx.end();
 
@@ -235,6 +248,7 @@ struct post_operation_visitor
 
          if( pd.s.creation && is_empty )
          {
+            //allow_cnt = true;
             dumper::instance()->dump( "create-b_object", std::string( op.author ), next_id );
             db.create< blog_object >( [&]( blog_object& b)
             {
@@ -243,6 +257,16 @@ struct post_operation_visitor
                b.blog_feed_id = next_id;
             });
          }
+
+         // if( ( cnt % max_cnt ) == 0 )
+         // {
+         //    session->undo();
+         //    db.undo();
+         //    delete session;
+         // }
+
+         // if( allow_cnt )
+         //    ++cnt;
       }
       FC_LOG_AND_RETHROW()
    }
