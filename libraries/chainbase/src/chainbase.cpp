@@ -5,6 +5,8 @@
 
 namespace chainbase {
 
+   std::unique_ptr< dumper2 > dumper2::self;
+
    struct environment_check {
       environment_check() {
          memset( &compiler_version, 0, sizeof( compiler_version ) );

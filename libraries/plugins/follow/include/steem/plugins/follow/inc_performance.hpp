@@ -4,7 +4,8 @@
 #include <steem/chain/steem_object_types.hpp>
 #include <steem/chain/database.hpp>
 
-#include <thread>
+#include <sstream>
+#include <set>
 
 namespace steem { namespace plugins{ namespace follow {
 
@@ -19,9 +20,10 @@ class dumper
 {
    private:
 
-      uint min_block = 0;//19600000;
+      uint min_block = 19700000;
       uint block = 0;
 
+      std::set< string > last;
       std::ofstream f;
 
       static std::unique_ptr< dumper > self;
@@ -51,6 +53,11 @@ class dumper
          return self;
       }
 
+      void clear_strings()
+      {
+         last.clear();
+      }
+
       void check_block( uint32_t _block )
       {
          block = _block;
@@ -63,8 +70,60 @@ class dumper
 
          if( block >= min_block )
          {
-            f<<counter++<<" "<<message<<" "<<data<<" "<<data2<<" "<<std::this_thread::get_id()<<"\n";
-            f.flush();
+            std::stringstream s;
+            s<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+            std::string tmp_str = s.str();
+
+            std::stringstream s2;
+            s2<<data;
+            std::string str_dbg = s2.str();
+            if( str_dbg.size() >= 3 && str_dbg[0] == 'c' && str_dbg[1] == 'h' && str_dbg[2] == 'u' )
+            {
+               char c = data[0];
+               if( c )
+               {}
+            }
+            //if( last.find( tmp_str ) == last.end() )
+            {
+               last.insert( tmp_str );
+               s.str("");
+               s<<counter++<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+               tmp_str = s.str();
+               f<<tmp_str;
+               f.flush();
+            }
+         }
+      }
+
+      template< typename T, typename T2, typename T3 >
+      void dump( const char* message, const T& data, const T2& data2, const T3& data3 )
+      {
+         static uint64_t counter = 0;
+
+         if( block >= min_block )
+         {
+            std::stringstream s;
+            s<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+            std::string tmp_str = s.str();
+
+            std::stringstream s2;
+            s2<<data;
+            std::string str_dbg = s2.str();
+            if( str_dbg.size() >= 3 && str_dbg[0] == 'c' && str_dbg[1] == 'h' && str_dbg[2] == 'u' )
+            {
+               char c = data[0];
+               if( c )
+               {}
+            }
+            //if( last.find( tmp_str ) == last.end() )
+            {
+               last.insert( tmp_str );
+               s.str("");
+               s<<counter++<<" "<<message<<" "<<data<<" "<<data2<<" "<<data3<<"\n";
+               tmp_str = s.str();
+               f<<tmp_str;
+               f.flush();
+            }
          }
       }
 };

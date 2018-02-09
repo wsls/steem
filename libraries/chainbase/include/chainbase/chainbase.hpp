@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <typeindex>
 #include <typeinfo>
+#include <set>
 
 #ifndef CHAINBASE_NUM_RW_LOCKS
    #define CHAINBASE_NUM_RW_LOCKS 10
@@ -79,6 +80,87 @@ namespace helpers
 } /// namespace helpers
 
 namespace chainbase {
+
+
+class dumper2
+{
+   private:
+
+      uint min_block = 0;//19600000;
+      uint block = 0;
+
+      std::set< std::string > last;
+      std::ofstream f;
+
+      static std::unique_ptr< dumper2 > self;
+
+      dumper2() :
+#if ENABLE_STD_ALLOCATOR == 1
+      f( "undo_log.txt", std::ofstream::out | std::ofstream::app )
+#else
+      f( "undo_log.txt", std::ofstream::out | std::ofstream::app )
+#endif
+      {
+      }
+
+   public:
+
+      ~dumper2()
+      {
+         f.flush();
+         f.close();
+      }
+
+      static std::unique_ptr< dumper2 >& instance()
+      {
+         if( !self )
+            self = std::unique_ptr< dumper2 >( new dumper2() );
+
+         return self;
+      }
+
+      void clear_strings()
+      {
+         last.clear();
+      }
+
+      void check_block( uint32_t _block )
+      {
+         block = _block;
+      }
+
+      template< typename T, typename T2 >
+      void dump( const char* message, const T& data, const T2& data2 )
+      {
+         static uint64_t counter = 0;
+
+         if( block >= min_block )
+         {
+            std::stringstream s;
+            s<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+            std::string tmp_str = s.str();
+
+            // std::stringstream s2;
+            // s2<<data;
+            // std::string str_dbg = s2.str();
+            // if( str_dbg.size() >= 3 && str_dbg[0] == 'c' && str_dbg[1] == 'h' && str_dbg[2] == 'u' )
+            // {
+            //    char c = data[0];
+            //    if( c )
+            //    {}
+            // }
+            //if( last.find( tmp_str ) == last.end() )
+            {
+               last.insert( tmp_str );
+               s.str("");
+               s<<counter++<<" "<<message<<" "<<data<<" "<<data2<<"\n";
+               tmp_str = s.str();
+               f<<tmp_str;
+               f.flush();
+            }
+         }
+      }
+};
 
    namespace bip = boost::interprocess;
    namespace bfs = boost::filesystem;
@@ -135,6 +217,8 @@ namespace chainbase {
          friend bool operator == ( const oid& a, const oid& b ) { return a._id == b._id; }
          friend bool operator != ( const oid& a, const oid& b ) { return a._id != b._id; }
          int64_t _id = 0;
+
+         int64_t get_id() const{ return _id; };
    };
 
    template<uint16_t TypeNumber, typename Derived>
@@ -339,7 +423,6 @@ namespace chainbase {
          const index_type& indicies()const { return _indices; }
          int64_t revision()const { return _revision; }
 
-
          /**
           *  Restores the state to how it was prior to the current session discarding all changes
           *  made between the last revision and the current revision.
@@ -349,12 +432,21 @@ namespace chainbase {
 
             const auto& head = _stack.back();
 
-            for( auto& item : head.old_values ) {
-               auto ok = _indices.modify( _indices.find( item.second.id ), [&]( value_type& v ) {
+            dumper2::instance()->dump( "undo - start", "0", "0" );
+
+            for( auto& item : head.old_values )
+            {
+               auto found = _indices.find( item.second.id );
+
+               dumper2::instance()->dump( "undo - found", item.second.id.get_id(), ( found == _indices.end() )?"no":"exist" );
+
+               auto ok = _indices.modify( found, [&]( value_type& v ) {
                   v = std::move( item.second );
                });
                if( !ok ) BOOST_THROW_EXCEPTION( std::logic_error( "Could not modify object-UNDO, most likely a uniqueness constraint was violated" ) );
             }
+
+            dumper2::instance()->dump( "undo - end", "0", "0" );
 
             for( const auto& id : head.new_ids )
             {
@@ -514,12 +606,19 @@ namespace chainbase {
             auto& head = _stack.back();
 
             if( head.new_ids.find( v.id ) != head.new_ids.end() )
+            {
+               dumper2::instance()->dump( "on_modify", "return_1", v.id.get_id() );
                return;
+            }
 
             auto itr = head.old_values.find( v.id );
             if( itr != head.old_values.end() )
+            {
+               dumper2::instance()->dump( "on_modify", "return_2", v.id.get_id() );
                return;
+            }
 
+            dumper2::instance()->dump( "on_modify", "emplace", v.id.get_id() );
             head.old_values.emplace( std::pair< typename value_type::id_type, const value_type& >( v.id, v ) );
          }
 
@@ -528,20 +627,27 @@ namespace chainbase {
 
             auto& head = _stack.back();
             if( head.new_ids.count(v.id) ) {
+               dumper2::instance()->dump( "on_remove", "return_1", v.id.get_id() );
                head.new_ids.erase( v.id );
                return;
             }
 
             auto itr = head.old_values.find( v.id );
             if( itr != head.old_values.end() ) {
+               dumper2::instance()->dump( "on_remove", "return2_emplace", itr->second.id.get_id() );
                head.removed_values.emplace( std::move( *itr ) );
+               dumper2::instance()->dump( "on_remove", "return2_erase", v.id.get_id() );
                head.old_values.erase( v.id );
                return;
             }
 
             if( head.removed_values.count( v.id ) )
+            {
+               dumper2::instance()->dump( "on_remove", "return3", v.id.get_id() );
                return;
+            }
 
+            dumper2::instance()->dump( "on_remove", "emplace", v.id.get_id() );
             head.removed_values.emplace( std::pair< typename value_type::id_type, const value_type& >( v.id, v ) );
          }
 
@@ -549,6 +655,7 @@ namespace chainbase {
             if( !enabled() ) return;
             auto& head = _stack.back();
 
+            dumper2::instance()->dump( "on_create", "insert", v.id.get_id() );
             head.new_ids.insert( v.id );
          }
 

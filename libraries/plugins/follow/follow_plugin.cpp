@@ -115,7 +115,7 @@ struct pre_operation_visitor
          {
             const auto& old_feed = *itr;
             ++itr;
-            dumper::instance()->dump( "remove-f_object4", std::string( old_feed.account ), old_feed.account_feed_id );
+            dumper::instance()->dump( "remove-f_object4", std::string( old_feed.account ), old_feed.account_feed_id, old_feed.id.get_id() );
             db.remove( old_feed );
          }
 
@@ -126,7 +126,7 @@ struct pre_operation_visitor
          {
             const auto& old_blog = *blog_itr;
             ++blog_itr;
-            dumper::instance()->dump( "remove-b_object5", std::string( old_blog.account ), old_blog.blog_feed_id );
+            dumper::instance()->dump( "remove-b_object5", std::string( old_blog.account ), old_blog.blog_feed_id, old_blog.id.get_id() );
             db.remove( old_blog );
          }
       }
@@ -200,14 +200,17 @@ struct post_operation_visitor
          // static int cnt = 1; 
          // static int max_cnt = 2;
 
+         // dumper::instance()->clear_strings();
+
          // if( ( cnt % max_cnt ) == 0 )
          // {
          //    session = new database::session( db.start_undo_session( true ) );
          // }
 
-         // bool allow_cnt = false;
+         //  bool allow_cnt = false;
 
-         dumper::instance()->check_block( db.head_block_num() );
+         // dumper::instance()->check_block( db.head_block_num() );
+         // dumper::instance()->dump( "REGULAR(PLUG) - BEGIN", "0", "0" );
          if( db.head_block_time() >= _plugin._self.start_feeds )
          {
             while( itr != idx.end() && itr->following == op.author )
@@ -257,12 +260,64 @@ struct post_operation_visitor
                b.blog_feed_id = next_id;
             });
          }
+         //dumper::instance()->dump( "REGULAR(PLUG) - END", "0", "0" );
 
          // if( ( cnt % max_cnt ) == 0 )
          // {
          //    session->undo();
          //    db.undo();
          //    delete session;
+
+         //    dumper::instance()->dump( "REUNDO(PLUG) - BEGIN", "0", "0" );
+         //    auto itr = idx.find( op.author );
+         //    while( itr != idx.end() && itr->following == op.author )
+         //    {
+         //       if( itr->what & ( 1 << blog ) )
+         //       {
+         //          //allow_cnt = true;
+
+         //          auto feed_itr = comment_idx.find( boost::make_tuple( c.id, itr->follower ) );
+         //          bool is_empty = feed_itr == comment_idx.end();
+
+         //          pd.init( c.id, is_empty );
+         //          uint32_t next_id = perf.delete_old_objects< performance_data::t_creation_type::part_feed >( old_feed_idx, itr->follower, _plugin._self.max_feed_size, pd );
+
+         //          if( pd.s.creation && is_empty )
+         //          {
+         //             dumper::instance()->dump( "create-f_object6", std::string( itr->follower ), next_id );
+         //             db.create< feed_object >( [&]( feed_object& f )
+         //             {
+         //                f.account = itr->follower;
+         //                f.comment = c.id;
+         //                f.account_feed_id = next_id;
+         //             });
+         //          }
+
+         //       }
+         //       ++itr;
+         //    }
+
+         //    const auto& comment_blog_idx = db.get_index< blog_index >().indices().get< by_comment >();
+         //    auto blog_itr = comment_blog_idx.find( boost::make_tuple( c.id, op.author ) );
+         //    const auto& old_blog_idx = db.get_index< blog_index >().indices().get< by_blog >();
+         //    bool is_empty = blog_itr == comment_blog_idx.end();
+
+         //    pd.init( c.id, is_empty );
+         //    uint32_t next_id = perf.delete_old_objects< performance_data::t_creation_type::full_blog >( old_blog_idx, op.author, _plugin._self.max_feed_size, pd );
+
+         //    if( pd.s.creation && is_empty )
+         //    {
+         //       allow_cnt = true;
+         //       dumper::instance()->dump( "create-b_object7", std::string( op.author ), next_id );
+         //       db.create< blog_object >( [&]( blog_object& b)
+         //       {
+         //          b.account = op.author;
+         //          b.comment = c.id;
+         //          b.blog_feed_id = next_id;
+         //       });
+         //    }
+         
+         //    dumper::instance()->dump( "REUNDO(PLUG) - END", "0", "0" );   
          // }
 
          // if( allow_cnt )

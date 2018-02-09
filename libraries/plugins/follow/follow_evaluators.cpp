@@ -176,6 +176,8 @@ void reblog_evaluator::do_apply( const reblog_operation& o )
       // static int cnt = 1; 
       // static int max_cnt = 2;
 
+      // dumper::instance()->clear_strings();
+
       // if( ( cnt % max_cnt ) == 0 )
       // {
       //    session = new database::session( _db.start_undo_session( true ) );
@@ -185,6 +187,7 @@ void reblog_evaluator::do_apply( const reblog_operation& o )
 
       if( _db.head_block_time() >= _plugin->start_feeds )
       {
+         //dumper::instance()->dump( "REGULAR(EVAL) - BEGIN", "0", "0" );
          while( itr != idx.end() && itr->following == o.account )
          {
             if( itr->what & ( 1 << blog ) )
@@ -216,7 +219,7 @@ void reblog_evaluator::do_apply( const reblog_operation& o )
                   {
                      if( pd.s.allow_modify )
                      {
-                        dumper::instance()->dump( "modifX-f_object3", std::string( itr->follower ), feed_itr->account_feed_id );
+                        dumper::instance()->dump( "modifX-f_object3", std::string( itr->follower ), feed_itr->account_feed_id, feed_itr->id.get_id() );
                         _db.modify( *feed_itr, [&]( feed_object& f )
                         {
                            f.reblogged_by.push_back( o.account );
@@ -228,12 +231,60 @@ void reblog_evaluator::do_apply( const reblog_operation& o )
             }
             ++itr;
          }
+         //dumper::instance()->dump( "REGULAR(EVAL) - END", "0", "0" );
 
          // if( ( cnt % max_cnt ) == 0 )
          // {
          //    session->undo();
          //    _db.undo();
          //    delete session;
+
+         //    dumper::instance()->dump( "REUNDO(EVAL) - BEGIN", "0", "0" );
+         //    auto itr = idx.find( o.account );
+         //    while( itr != idx.end() && itr->following == o.account )
+         //    {
+         //       if( itr->what & ( 1 << blog ) )
+         //       {
+         //          allow_cnt = true;
+
+         //          auto feed_itr = comment_idx.find( boost::make_tuple( c.id, itr->follower ) );
+         //          bool is_empty = feed_itr == comment_idx.end();
+
+         //          pd.init( o.account, _db.head_block_time(), c.id, is_empty, is_empty ? 0 : feed_itr->account_feed_id );
+         //          uint32_t next_id = perf.delete_old_objects< performance_data::t_creation_type::full_feed >( old_feed_idx, itr->follower, _plugin->max_feed_size, pd );
+
+         //          if( pd.s.creation )
+         //          {
+         //             if( is_empty )
+         //             {
+         //                dumper::instance()->dump( "create-f_object2", std::string( itr->follower ), next_id );
+         //                _db.create< feed_object >( [&]( feed_object& f )
+         //                {
+         //                   f.account = itr->follower;
+         //                   f.reblogged_by.push_back( o.account );
+         //                   f.first_reblogged_by = o.account;
+         //                   f.first_reblogged_on = _db.head_block_time();
+         //                   f.comment = c.id;
+         //                   f.account_feed_id = next_id;
+         //                });
+         //             }
+         //             else
+         //             {
+         //                if( pd.s.allow_modify )
+         //                {
+         //                   dumper::instance()->dump( "modifX-f_object3", std::string( itr->follower ), feed_itr->account_feed_id, feed_itr->id.get_id() );
+         //                   _db.modify( *feed_itr, [&]( feed_object& f )
+         //                   {
+         //                      f.reblogged_by.push_back( o.account );
+         //                   });
+         //                }
+         //             }
+         //          }
+
+         //       }
+         //       ++itr;
+         //    }
+         //    dumper::instance()->dump( "REUNDO(EVAL) - END", "0", "0" );
          // }
 
          // if( allow_cnt )
